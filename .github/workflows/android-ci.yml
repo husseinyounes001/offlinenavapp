@@ -21,18 +21,27 @@ jobs:
 
       - name: Install Android command-line tools and SDK components
         run: |
-          set -e
+          set -euo pipefail
           SDK_ROOT="$HOME/Android/Sdk"
-          mkdir -p "$SDK_ROOT/cmdline-tools"
+          mkdir -p "$SDK_ROOT"
+          sudo apt-get update -y
+          sudo apt-get install -y unzip wget
+          echo "Downloading Android command-line tools..."
           curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-latest.zip -o cmdline-tools.zip
           unzip -q cmdline-tools.zip -d cmdline-temp
-          # Move contents into cmdline-tools/latest
           mkdir -p "$SDK_ROOT/cmdline-tools/latest"
-          mv cmdline-temp/cmdline-tools/* "$SDK_ROOT/cmdline-tools/latest/"
+          # The zip may contain a top-level folder named 'cmdline-tools'
+          if [ -d cmdline-temp/cmdline-tools ]; then
+            mv cmdline-temp/cmdline-tools/* "$SDK_ROOT/cmdline-tools/latest/"
+          else
+            mv cmdline-temp/* "$SDK_ROOT/cmdline-tools/latest/"
+          fi
           rm -rf cmdline-tools.zip cmdline-temp
           export ANDROID_SDK_ROOT="$SDK_ROOT"
           export PATH="$SDK_ROOT/cmdline-tools/latest/bin:$SDK_ROOT/platform-tools:$PATH"
-          yes | sdkmanager --sdk_root="$SDK_ROOT" --install "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          echo "Installing required SDK packages..."
+          yes | sdkmanager --sdk_root="$SDK_ROOT" "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          echo "Accepting licenses..."
           yes | sdkmanager --sdk_root="$SDK_ROOT" --licenses || true
 
 

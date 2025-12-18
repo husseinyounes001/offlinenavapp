@@ -66,3 +66,4 @@ Notes
 - `app/proguard-rules.pro` was added (empty) because `build.gradle` references it.
 - For Play Store releases prefer building an AAB (`bundleRelease`) and using Play App Signing.
 - If you want, I can add the Gradle wrapper files to the repo, but the wrapper JAR is a binary normally generated via `gradle wrapper` on a machine that has Gradle installed.
+\n# Last CI trigger: 2025-12-18T15:48:23.1138123+02:00

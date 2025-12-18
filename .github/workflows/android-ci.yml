@@ -19,19 +19,22 @@ jobs:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Install Android SDK components
-        uses: android-actions/setup-android@v2
-        with:
-          api-level: 33
-          build-tools: '33.0.2'
-          components: |
-            platform-tools
-            platforms;android-33
-            build-tools;33.0.2
-
-      - name: Accept Android SDK licenses
+      - name: Install Android command-line tools and SDK components
         run: |
-          yes | sdkmanager --licenses || true
+          set -e
+          SDK_ROOT="$HOME/Android/Sdk"
+          mkdir -p "$SDK_ROOT/cmdline-tools"
+          curl -fsSL https://dl.google.com/android/repository/commandlinetools-linux-latest.zip -o cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d cmdline-temp
+          # Move contents into cmdline-tools/latest
+          mkdir -p "$SDK_ROOT/cmdline-tools/latest"
+          mv cmdline-temp/cmdline-tools/* "$SDK_ROOT/cmdline-tools/latest/"
+          rm -rf cmdline-tools.zip cmdline-temp
+          export ANDROID_SDK_ROOT="$SDK_ROOT"
+          export PATH="$SDK_ROOT/cmdline-tools/latest/bin:$SDK_ROOT/platform-tools:$PATH"
+          yes | sdkmanager --sdk_root="$SDK_ROOT" --install "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          yes | sdkmanager --sdk_root="$SDK_ROOT" --licenses || true
+
 
       - name: Build Debug APK via Gradle
         uses: gradle/gradle-build-action@v2

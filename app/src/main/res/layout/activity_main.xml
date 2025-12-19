@@ -10,6 +10,110 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Search and Route Planning Panel -->
+    <LinearLayout
+        android:id="@+id/search_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_alignParentTop="true"
+        android:layout_margin="16dp"
+        android:background="#FFFFFF"
+        android:elevation="4dp"
+        android:padding="12dp">
+
+        <!-- Source Location -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <EditText
+                android:id="@+id/et_source"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="From: (or use My Location)"
+                android:inputType="text"
+                android:singleLine="true"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btn_use_my_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📍"
+                android:textSize="18sp"
+                android:minWidth="48dp" />
+        </LinearLayout>
+
+        <!-- Destination Location -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <EditText
+                android:id="@+id/et_destination"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="To: destination"
+                android:inputType="text"
+                android:imeOptions="actionSearch"
+                android:singleLine="true"
+                android:textSize="14sp" />
+
+            <Button
+                android:id="@+id/btn_search_destination"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔍"
+                android:textSize="18sp"
+                android:minWidth="48dp" />
+        </LinearLayout>
+
+        <!-- Action Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btn_calculate_route"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Calculate Route"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="#2196F3" />
+
+            <Button
+                android:id="@+id/btn_save_favorite"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⭐ Save"
+                android:backgroundTint="#FF9800" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- My Location button -->
+    <Button
+        android:id="@+id/btn_my_location"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_alignParentEnd="true"
+        android:layout_above="@+id/btn_support_call"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:text="📍"
+        android:textSize="24sp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:elevation="4dp" />
+
+    <!-- Support Call button -->
     <Button
         android:id="@+id/btn_support_call"
         android:layout_width="wrap_content"

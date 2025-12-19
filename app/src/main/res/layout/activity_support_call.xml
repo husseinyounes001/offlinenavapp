@@ -5,6 +5,32 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Emergency Support"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Quick Call Support Button -->
+    <Button
+        android:id="@+id/btn_quick_support"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="📞 Call Support: +1-800-SUPPORT"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:layout_marginBottom="24dp"
+        android:backgroundTint="#4CAF50" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Or call custom number:"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp" />
+
     <EditText
         android:id="@+id/et_name"
         android:layout_width="match_parent"

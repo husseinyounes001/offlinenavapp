@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/compat">
+    
+    <item
+        android:id="@+id/menu_navigation"
+        android:title="Navigation"
+        android:icon="@android:drawable/ic_dialog_map"
+        app:showAsAction="ifRoom" />
+    
+    <item
+        android:id="@+id/menu_favorites"
+        android:title="Favorites"
+        android:icon="@android:drawable/btn_star_big_on"
+        app:showAsAction="ifRoom" />
+    
+    <item
+        android:id="@+id/menu_support"
+        android:title="Support Call"
+        android:icon="@android:drawable/ic_menu_call"
+        app:showAsAction="never" />
+    
+    <item
+        android:id="@+id/menu_about"
+        android:title="About"
+        android:icon="@android:drawable/ic_menu_info_details"
+        app:showAsAction="never" />
+    
+</menu>

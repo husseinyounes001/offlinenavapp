@@ -3,17 +3,22 @@
     package="com.example.offlinenav">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
         android:label="OfflineNavApp"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <activity android:name="com.example.offlinenav.SupportCallActivity" />
-        <activity android:name="com.example.offlinenav.MainActivity">
+        <activity android:name="com.example.offlinenav.FavoritesActivity" android:exported="false" />
+        <activity android:name="com.example.offlinenav.SupportCallActivity" android:exported="false" />
+        <activity android:name="com.example.offlinenav.MainActivity" android:exported="false" />
+        <activity android:name="com.example.offlinenav.MenuActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

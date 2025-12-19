@@ -1,3 +1,15 @@
+/**
+ * SupportCallActivity - Emergency support call interface
+ *
+ * This activity provides emergency calling functionality with:
+ * - Quick support button for predefined emergency number
+ * - Custom phone number input for any contact
+ * - Call history tracking and display
+ * - Phone permission handling
+ * - Integration with main navigation menu
+ *
+ * All calls are logged to a local database for reference.
+ */
 package com.example.offlinenav;
 
 import android.Manifest;
@@ -24,8 +36,12 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class SupportCallActivity extends AppCompatActivity {
+
+    // Constants for phone permissions and default numbers
     private static final int REQUEST_CALL_PHONE = 1001;
     private static final String SUPPORT_NUMBER = "+1-800-SUPPORT"; // Default support number
+
+    // Database helper for call logging
     private CallDbHelper dbHelper;
 
     @Override
@@ -116,8 +132,17 @@ public class SupportCallActivity extends AppCompatActivity {
             .show();
     }
 
+    /**
+     * Initiate a phone call and log it to database
+     *
+     * Saves call details to local database for history tracking,
+     * then requests phone permission if needed and places the call.
+     *
+     * @param number Phone number to call
+     * @param name Contact name (can be empty for anonymous calls)
+     */
     private void callNumber(String number, String name) {
-        // Save to DB
+        // Log call to database for history tracking
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put(CallDbHelper.COL_NAME, name);
@@ -125,7 +150,7 @@ public class SupportCallActivity extends AppCompatActivity {
         cv.put(CallDbHelper.COL_TIMESTAMP, System.currentTimeMillis());
         long id = db.insert(CallDbHelper.TABLE_NAME, null, cv);
 
-        // Ask permission if needed
+        // Request phone permission if not already granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CALL_PHONE}, REQUEST_CALL_PHONE);
         } else {
@@ -133,6 +158,14 @@ public class SupportCallActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Execute the actual phone call using Android's dialer
+     *
+     * Creates an ACTION_CALL intent with normalized phone number
+     * and starts the call through the system's phone app.
+     *
+     * @param number Phone number to dial
+     */
     private void placeCall(String number) {
         Intent intent = new Intent(Intent.ACTION_CALL);
         intent.setData(android.net.Uri.parse("tel:" + PhoneNumberUtils.normalizeNumber(number)));
@@ -153,11 +186,26 @@ public class SupportCallActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Load and display call history in the list view
+     *
+     * Queries the call database and populates the list view with
+     * call history, showing name, number, and timestamp for each call.
+     * Results are ordered by timestamp (newest first).
+     *
+     * @param lv ListView to populate with call history
+     */
     private void loadCalls(ListView lv) {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+        // Query calls ordered by timestamp (newest first)
         Cursor c = db.query(CallDbHelper.TABLE_NAME, null, null, null, null, null, CallDbHelper.COL_TIMESTAMP + " DESC");
+
+        // Map database columns to list item views
         String[] from = new String[]{CallDbHelper.COL_NAME, CallDbHelper.COL_NUMBER, CallDbHelper.COL_TIMESTAMP};
         int[] to = new int[]{R.id.item_name, R.id.item_number, R.id.item_time};
+
+        // Create and set adapter
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(this, R.layout.item_call, c, from, to, 0);
         lv.setAdapter(adapter);
     }

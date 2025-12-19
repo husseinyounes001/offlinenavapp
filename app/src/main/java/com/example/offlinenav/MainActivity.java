@@ -53,25 +53,59 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * MainActivity - The core navigation activity
+ *
+ * Handles all map interactions, location services, routing, and user interface
+ * for the offline navigation application.
+ */
 public class MainActivity extends AppCompatActivity implements LocationListener {
-    private MapView map = null;
-    private MyLocationNewOverlay myLocationOverlay;
-    private LocationManager locationManager;
-    private EditText sourceEditText, destinationEditText;
-    private Geocoder geocoder;
-    private Marker sourceMarker, destinationMarker;
-    private Polyline routeLine;
-    private boolean isOfflineMode = false;
-    private FavoritesDbHelper favoritesDbHelper;
-    private GeoPoint sourcePoint = null;
-    private GeoPoint destinationPoint = null;
-    
-    private static final int LOCATION_PERMISSION_REQUEST = 1;
 
+    // Map and location components
+    private MapView map = null;                           // Main map view component
+    private MyLocationNewOverlay myLocationOverlay;       // GPS location overlay
+    private LocationManager locationManager;              // Android location manager
+
+    // UI components
+    private EditText sourceEditText, destinationEditText; // Text inputs for locations
+
+    // Location services
+    private Geocoder geocoder;                            // Converts addresses to coordinates
+
+    // Map overlays
+    private Marker sourceMarker, destinationMarker;       // Start and end point markers
+    private Polyline routeLine;                           // Route visualization line
+
+    // State variables
+    private boolean isOfflineMode = false;               // Whether using offline maps
+    private FavoritesDbHelper favoritesDbHelper;          // Database helper for favorites
+    private GeoPoint sourcePoint = null;                  // Current source location
+    private GeoPoint destinationPoint = null;             // Current destination location
+
+    // Constants
+    private static final int LOCATION_PERMISSION_REQUEST = 1; // Permission request code
+
+    /**
+     * Initialize the main activity and set up all UI components and services
+     *
+     * This method:
+     * - Configures OSMDroid map settings
+     * - Sets up the action bar
+     * - Initializes database helper
+     * - Finds and configures UI elements
+     * - Sets up map with offline support
+     * - Configures location tracking
+     * - Handles navigation intents from favorites
+     * - Sets up all button click listeners
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Load OSMDroid configuration from shared preferences
         Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
+
+        // Set the main layout
         setContentView(R.layout.activity_main);
 
         // Enable action bar without back button (this is main screen)
@@ -301,9 +335,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    /**
+     * Configure the map to use offline MBTiles if available, otherwise online tiles
+     *
+     * This method checks for the presence of map.mbtiles file in the app's internal storage.
+     * If found, it sets up offline tile provider using MBTiles format.
+     * If not found, it falls back to online OpenStreetMap tiles.
+     *
+     * MBTiles is a SQLite-based format for storing map tiles offline.
+     */
     private void setupMapWithOfflineSupport() {
+        // Check for offline map file in app's private storage
         File mbtiles = new File(getFilesDir(), "map.mbtiles");
-        
+
         if (mbtiles.exists()) {
             try {
                 MBTilesFileArchive[] archives = new MBTilesFileArchive[]{
@@ -476,35 +520,60 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    /**
+     * Calculate route between two points, choosing online or offline method based on connectivity
+     *
+     * Online routing uses OSRM (Open Source Routing Machine) to calculate routes that follow
+     * actual roads, similar to Google Maps. Offline routing draws a straight line between
+     * points with distance estimation.
+     *
+     * @param start Starting GeoPoint
+     * @param end Ending GeoPoint
+     */
     private void calculateRoute(final GeoPoint start, final GeoPoint end) {
-        // Check internet connectivity
+        // Check internet connectivity to determine routing method
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-        
+
         if (isConnected) {
-            // Try online routing (Google Maps-style)
+            // Online: Use OSRM for road-following routes
             Toast.makeText(this, "Calculating online route (following roads)...", Toast.LENGTH_SHORT).show();
             calculateOnlineRoute(start, end);
         } else {
-            // Use offline routing (straight-line)
+            // Offline: Use straight-line routing
             Toast.makeText(this, "No internet - using offline routing", Toast.LENGTH_SHORT).show();
             drawOfflineRoute(start, end);
         }
     }
 
+    /**
+     * Calculate route using online OSRM service in background thread
+     *
+     * Uses Open Source Routing Machine (OSRM) to get road-following routes.
+     * This provides accurate driving directions that follow actual roads,
+     * similar to Google Maps or other navigation services.
+     *
+     * @param start Starting point
+     * @param end Ending point
+     */
     private void calculateOnlineRoute(final GeoPoint start, final GeoPoint end) {
         new AsyncTask<Void, Void, Road>() {
             @Override
             protected Road doInBackground(Void... params) {
                 try {
+                    // Create OSRM road manager with app identifier
                     RoadManager roadManager = new OSRMRoadManager(MainActivity.this, "OfflineNavApp");
+
+                    // Set up waypoints for routing
                     ArrayList<GeoPoint> waypoints = new ArrayList<>();
                     waypoints.add(start);
                     waypoints.add(end);
+
+                    // Get road data from OSRM server
                     return roadManager.getRoad(waypoints);
                 } catch (Exception e) {
-                    return null;
+                    return null; // Return null on any error
                 }
             }
 
@@ -588,16 +657,26 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         else map.getController().setZoom(7.0);
     }
 
+    /**
+     * Draw a straight-line route between two points for offline navigation
+     *
+     * This method creates a simple straight-line route visualization when
+     * internet is not available. It includes distance calculation and
+     * time estimation based on average road speeds in Lebanon.
+     *
+     * @param start Starting GeoPoint
+     * @param end Ending GeoPoint
+     */
     private void drawOfflineRoute(GeoPoint start, GeoPoint end) {
-        // Remove old route if exists
+        // Remove any existing route overlay
         if (routeLine != null) {
             map.getOverlays().remove(routeLine);
         }
-        
-        // Draw route line
+
+        // Create new route line overlay
         routeLine = new Polyline();
-        routeLine.setColor(Color.BLUE);
-        routeLine.setWidth(8f);
+        routeLine.setColor(Color.BLUE);  // Blue color for offline routes
+        routeLine.setWidth(8f);          // Line thickness
         List<GeoPoint> points = new ArrayList<>();
         points.add(start);
         points.add(end);
@@ -720,11 +799,37 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    /**
+     * Simple implementation of IRegisterReceiver for MBTiles offline map support
+     *
+     * This inner class provides the necessary broadcast receiver registration
+     * methods required by OSMDroid's tile provider system when using offline
+     * MBTiles. It's a minimal implementation that delegates to the Android context.
+     */
     static class SimpleRegisterReceiver implements IRegisterReceiver {
         private final android.content.Context ctx;
-        SimpleRegisterReceiver(android.content.Context c) { ctx = c; }
-        @Override public void destroy() {}
-        @Override public Intent registerReceiver(android.content.BroadcastReceiver receiver, android.content.IntentFilter filter) { return ctx.registerReceiver(receiver, filter); }
-        @Override public void unregisterReceiver(android.content.BroadcastReceiver receiver) { try { ctx.unregisterReceiver(receiver); } catch (Exception ignored){} }
+
+        SimpleRegisterReceiver(android.content.Context c) {
+            ctx = c;
+        }
+
+        @Override
+        public void destroy() {
+            // No cleanup needed
+        }
+
+        @Override
+        public Intent registerReceiver(android.content.BroadcastReceiver receiver, android.content.IntentFilter filter) {
+            return ctx.registerReceiver(receiver, filter);
+        }
+
+        @Override
+        public void unregisterReceiver(android.content.BroadcastReceiver receiver) {
+            try {
+                ctx.unregisterReceiver(receiver);
+            } catch (Exception ignored) {
+                // Ignore exceptions during unregistration
+            }
+        }
     }
 }

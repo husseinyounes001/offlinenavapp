@@ -1,3 +1,15 @@
+/**
+ * FavoritesActivity - Manages user's saved favorite locations
+ *
+ * This activity displays a list of saved locations with the following features:
+ * - View all favorite locations with names, addresses, and coordinates
+ * - Navigate to any favorite location (opens MainActivity with destination set)
+ * - Delete favorite locations with confirmation dialog
+ * - Empty state when no favorites exist
+ * - Integration with main navigation menu
+ *
+ * Uses SQLite database through FavoritesDbHelper for data persistence.
+ */
 package com.example.offlinenav;
 
 import android.content.Intent;
@@ -20,10 +32,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class FavoritesActivity extends AppCompatActivity {
-    private FavoritesDbHelper dbHelper;
-    private ListView listView;
-    private TextView emptyView;
-    private FavoritesCursorAdapter adapter;
+
+    // Database and UI components
+    private FavoritesDbHelper dbHelper;           // Database helper for favorites
+    private ListView listView;                    // List view for displaying favorites
+    private TextView emptyView;                   // Empty state message
+    private FavoritesCursorAdapter adapter;       // Custom cursor adapter
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,25 +95,43 @@ public class FavoritesActivity extends AppCompatActivity {
             .show();
     }
 
+    /**
+     * Load and display all favorite locations from database
+     *
+     * Queries the favorites database and populates the list view.
+     * Shows empty state message if no favorites exist.
+     * Orders results by timestamp (newest first).
+     */
     private void loadFavorites() {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        Cursor c = db.query(FavoritesDbHelper.TABLE_NAME, null, null, null, null, null, 
+
+        // Query favorites ordered by timestamp (newest first)
+        Cursor c = db.query(FavoritesDbHelper.TABLE_NAME, null, null, null, null, null,
                            FavoritesDbHelper.COL_TIMESTAMP + " DESC");
-        
+
         if (c.getCount() == 0) {
+            // Show empty state
             emptyView.setVisibility(View.VISIBLE);
             listView.setVisibility(View.GONE);
         } else {
+            // Show list with favorites
             emptyView.setVisibility(View.GONE);
             listView.setVisibility(View.VISIBLE);
-            
+
             adapter = new FavoritesCursorAdapter(this, c);
             listView.setAdapter(adapter);
         }
     }
 
-    // Custom adapter to handle button clicks
+    /**
+     * Custom CursorAdapter for displaying favorite locations
+     *
+     * Handles the display of each favorite item in the list view,
+     * including name, address, coordinates, and action buttons
+     * for navigation and deletion.
+     */
     private class FavoritesCursorAdapter extends CursorAdapter {
+
         public FavoritesCursorAdapter(android.content.Context context, Cursor cursor) {
             super(context, cursor, 0);
         }
@@ -109,25 +141,34 @@ public class FavoritesActivity extends AppCompatActivity {
             return LayoutInflater.from(context).inflate(R.layout.item_favorite, parent, false);
         }
 
+        /**
+         * Bind cursor data to list item view
+         *
+         * Populates each list item with favorite location data and sets up
+         * click listeners for navigation and deletion actions.
+         */
         @Override
         public void bindView(View view, android.content.Context context, Cursor cursor) {
+            // Get UI elements from the item layout
             TextView nameView = view.findViewById(R.id.item_fav_name);
             TextView addressView = view.findViewById(R.id.item_fav_address);
             TextView coordsView = view.findViewById(R.id.item_fav_coords);
             Button navigateButton = view.findViewById(R.id.btn_navigate_to);
             Button deleteButton = view.findViewById(R.id.btn_delete_favorite);
 
+            // Extract data from cursor
             final long id = cursor.getLong(cursor.getColumnIndexOrThrow(FavoritesDbHelper.COL_ID));
             String name = cursor.getString(cursor.getColumnIndexOrThrow(FavoritesDbHelper.COL_NAME));
             String address = cursor.getString(cursor.getColumnIndexOrThrow(FavoritesDbHelper.COL_ADDRESS));
             final double lat = cursor.getDouble(cursor.getColumnIndexOrThrow(FavoritesDbHelper.COL_LATITUDE));
             final double lon = cursor.getDouble(cursor.getColumnIndexOrThrow(FavoritesDbHelper.COL_LONGITUDE));
 
+            // Populate UI elements
             nameView.setText(name);
             addressView.setText(address);
             coordsView.setText(String.format("%.4f, %.4f", lat, lon));
 
-            // Navigate button
+            // Navigate button - opens MainActivity with this location as destination
             navigateButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -135,12 +176,12 @@ public class FavoritesActivity extends AppCompatActivity {
                     intent.putExtra("latitude", lat);
                     intent.putExtra("longitude", lon);
                     intent.putExtra("name", name);
-                    intent.putExtra("navigate", true);
+                    intent.putExtra("navigate", true);  // Flag to trigger navigation
                     startActivity(intent);
                 }
             });
 
-            // Delete button
+            // Delete button - removes favorite with confirmation dialog
             deleteButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -148,10 +189,12 @@ public class FavoritesActivity extends AppCompatActivity {
                         .setTitle("Delete Favorite")
                         .setMessage("Remove '" + name + "' from favorites?")
                         .setPositiveButton("Delete", (dialog, which) -> {
+                            // Delete from database
                             SQLiteDatabase db = dbHelper.getWritableDatabase();
-                            db.delete(FavoritesDbHelper.TABLE_NAME, 
-                                     FavoritesDbHelper.COL_ID + "=?", 
+                            db.delete(FavoritesDbHelper.TABLE_NAME,
+                                     FavoritesDbHelper.COL_ID + "=?",
                                      new String[]{String.valueOf(id)});
+                            // Refresh the list
                             loadFavorites();
                             Toast.makeText(FavoritesActivity.this, "Favorite removed", Toast.LENGTH_SHORT).show();
                         })
